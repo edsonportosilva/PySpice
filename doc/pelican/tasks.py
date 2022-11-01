@@ -33,7 +33,7 @@ from pelican.settings import DEFAULT_CONFIG, get_settings_from_file
 
 SETTINGS_FILE_BASE = 'pelicanconf.py'
 SETTINGS = {}
-SETTINGS.update(DEFAULT_CONFIG)
+SETTINGS |= DEFAULT_CONFIG
 LOCAL_SETTINGS = get_settings_from_file(SETTINGS_FILE_BASE)
 SETTINGS.update(LOCAL_SETTINGS)
 
@@ -47,7 +47,7 @@ CONFIG = {
 }
 
 from SECRET_CONFIG import SSH_CONFIG
-CONFIG.update(SSH_CONFIG)
+CONFIG |= SSH_CONFIG
 
 ####################################################################################################
 
@@ -127,7 +127,7 @@ def livereload(ctx):
         server.watch(content_blob, lambda: build(ctx))
     # Watch the theme's templates and static assets
     theme_path = SETTINGS['THEME']
-    server.watch('{}/templates/*.html'.format(theme_path), lambda: build(ctx))
+    server.watch(f'{theme_path}/templates/*.html', lambda: build(ctx))
     static_file_extensions = ['.css', '.js']
     for extension in static_file_extensions:
         static_file = '{0}/static/**/*{1}'.format(theme_path, extension)

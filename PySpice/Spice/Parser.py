@@ -166,17 +166,14 @@ class Statement:
     ##############################################
 
     def __repr__(self):
-        return '{} {}'.format(self.__class__.__name__, repr(self._line))
+        return f'{self.__class__.__name__} {repr(self._line)}'
 
     ##############################################
 
     def value_to_python(self, x):
 
         if x:
-            if str(x)[0].isdigit():
-                return str(x)
-            else:
-                return "'{}'".format(x)
+            return str(x) if str(x)[0].isdigit() else f"'{x}'"
         else:
             return ''
 
@@ -189,8 +186,9 @@ class Statement:
     ##############################################
 
     def kwargs_to_python(self, kwargs):
-        return ['{}={}'.format(key, self.value_to_python(value))
-                for key, value in kwargs.items()]
+        return [
+            f'{key}={self.value_to_python(value)}' for key, value in kwargs.items()
+        ]
 
     ##############################################
 
@@ -223,7 +221,7 @@ class Title(Statement):
     ##############################################
 
     def __repr__(self):
-        return 'Title {}'.format(self._title)
+        return f'Title {self._title}'
 
 ####################################################################################################
 
@@ -246,13 +244,13 @@ class Lib(Statement):
     ##############################################
 
     def __repr__(self):
-        return 'Lib {}'.format(self._lib)
+        return f'Lib {self._lib}'
 
     ##############################################
 
     def to_python(self, netlist_name):
 
-        return '{}.lib({})'.format(netlist_name, self._lib) + os.linesep
+        return f'{netlist_name}.lib({self._lib}){os.linesep}'
 
 ####################################################################################################
 
@@ -275,13 +273,13 @@ class Include(Statement):
     ##############################################
 
     def __repr__(self):
-        return 'Include {}'.format(self._include)
+        return f'Include {self._include}'
 
     ##############################################
 
     def to_python(self, netlist_name):
 
-        return '{}.include({})'.format(netlist_name, self._include) + os.linesep
+        return f'{netlist_name}.include({self._include}){os.linesep}'
 
 ####################################################################################################
 
@@ -320,14 +318,14 @@ class Model(Statement):
     ##############################################
 
     def __repr__(self):
-        return 'Model {} {} {}'.format(self._name, self._model_type, self._parameters)
+        return f'Model {self._name} {self._model_type} {self._parameters}'
 
     ##############################################
 
     def to_python(self, netlist_name):
         args = self.values_to_python((self._name, self._model_type))
         kwargs = self.kwargs_to_python(self._parameters)
-        return '{}.model({})'.format(netlist_name, self.join_args(args + kwargs)) + os.linesep
+        return f'{netlist_name}.model({self.join_args(args + kwargs)}){os.linesep}'
 
     ##############################################
 
@@ -373,8 +371,11 @@ class SubCircuitStatement(Statement):
     ##############################################
 
     def __repr__(self):
-        text = 'SubCircuit {} {}'.format(self._name, self._nodes) + os.linesep
-        text += os.linesep.join(['  ' + repr(statement) for statement in self._statements])
+        text = f'SubCircuit {self._name} {self._nodes}{os.linesep}'
+        text += os.linesep.join(
+            [f'  {repr(statement)}' for statement in self._statements]
+        )
+
         return text
 
     ##############################################
@@ -393,10 +394,13 @@ class SubCircuitStatement(Statement):
 
     def to_python(self, ground=0):
 
-        subcircuit_name = 'subcircuit_' + self._name
+        subcircuit_name = f'subcircuit_{self._name}'
         args = self.values_to_python([subcircuit_name] + self._nodes)
         source_code = ''
-        source_code += '{} = SubCircuit({})'.format(subcircuit_name, self.join_args(args)) + os.linesep
+        source_code += (
+            f'{subcircuit_name} = SubCircuit({self.join_args(args)}){os.linesep}'
+        )
+
         source_code += SpiceParser.netlist_to_python(subcircuit_name, self, ground)
         return source_code
 
@@ -443,11 +447,7 @@ class Element(Statement):
         self._dict_parameters = {}
 
         # Read nodes
-        if not prefix_data.has_variable_number_of_pins:
-            number_of_pins = prefix_data.number_of_pins
-            if number_of_pins:
-                self._nodes, stop_location = self._line.read_words(stop_location, number_of_pins)
-        else: # Q or X
+        if prefix_data.has_variable_number_of_pins: # Q or X
             if prefix_data.prefix == 'Q':
                 self._nodes, stop_location = self._line.read_words(stop_location, 3)
                 # Fixme: optional node
@@ -456,6 +456,8 @@ class Element(Statement):
                 self._nodes = args[:-1]
                 self._parameters.append(args[-1]) # model name
 
+        elif number_of_pins := prefix_data.number_of_pins:
+            self._nodes, stop_location = self._line.read_words(stop_location, number_of_pins)
         # Read positionals
         number_of_positionals = prefix_data.number_of_positionals_min
         if number_of_positionals and stop_location is not None: # model is optional
@@ -539,7 +541,7 @@ class Element(Statement):
             args += self._parameters + nodes
         args = self.values_to_python(args)
         kwargs = self.kwargs_to_python(self._dict_parameters)
-        return '{}.{}({})'.format(netlist_name, self._prefix, self.join_args(args + kwargs)) + os.linesep
+        return f'{netlist_name}.{self._prefix}({self.join_args(args + kwargs)}){os.linesep}'
 
     ##############################################
 
@@ -615,10 +617,7 @@ class Line:
             for marker in self._end_of_line_comment:
                 _location = line.find(marker)
                 if _location != -1:
-                    if location == -1:
-                        location = _location
-                    else:
-                        location = min(_location, location)
+                    location = _location if location == -1 else min(_location, location)
             if location != -1:
                 text = line[:location].strip()
                 comment = line[location:].strip()
@@ -639,7 +638,7 @@ class Line:
                 self._text += ' '
             self._text += text
         if comment:
-            self._comment += ' // ' + comment
+            self._comment += f' // {comment}'
 
         _slice = self._line_range
         self._line_range = slice(_slice.start, _slice.stop + 1)
@@ -657,7 +656,7 @@ class Line:
             _slice = slice(1, len(statement) + 1)
             _statement = self._text[_slice]
             if _statement.lower() == lower_statement:
-                self._text = '.' + lower_statement + self._text[_slice.stop:]
+                self._text = f'.{lower_statement}{self._text[_slice.stop:]}'
 
     ##############################################
 
@@ -679,8 +678,7 @@ class Line:
             stop_location = line_str.find(' ', start_location)
             if stop_location == -1:
                 stop_location = None # read until end
-            word = line_str[start_location:stop_location].strip()
-            if word:
+            if word := line_str[start_location:stop_location].strip():
                 number_of_words_read += 1
                 words.append(word)
             if stop_location is None: # we should stop
@@ -691,11 +689,10 @@ class Line:
                                ' '*start_location + '^')
                     self._logger.warning(message)
                     raise ParseError(message)
-            else:
-                if start_location < stop_location:
-                    start_location = stop_location
-                else: # we have read a space
-                    start_location += 1
+            elif start_location < stop_location:
+                start_location = stop_location
+            else: # we have read a space
+                start_location += 1
 
         return words, stop_location
 
@@ -714,7 +711,7 @@ class Line:
                 if location != -1:
                     stop_location = location
                 else:
-                    raise NameError('Bad element line, missing key? ' + line_str)
+                    raise NameError(f'Bad element line, missing key? {line_str}')
 
         line_str = line_str[start_location:stop_location]
         words = [x for x in line_str.split(' ') if x]
@@ -731,24 +728,20 @@ class Line:
         parts = []
         for part in text.split():
             if '=' in part and part != '=':
-                left, right = [x for x in part.split('=')]
-                parts.append(left)
-                parts.append('=')
+                left, right = list(part.split('='))
+                parts.extend((left, '='))
                 if right:
                     parts.append(right)
             else:
                 parts.append(part)
 
-        i = 0
         i_stop = len(parts)
-        while i < i_stop:
-            if i + 1 < i_stop and parts[i + 1] == '=':
-                key, value = parts[i], parts[i + 2]
-                dict_parameters[key] = value
-                i += 3
-            else:
-                raise ParseError("Bad kwarg: {}".format(text))
+        for i in range(0, i_stop, 3):
+            if i + 1 >= i_stop or parts[i + 1] != '=':
+                raise ParseError(f"Bad kwarg: {text}")
 
+            key, value = parts[i], parts[i + 2]
+            dict_parameters[key] = value
         return dict_parameters
 
     ##############################################
@@ -773,9 +766,8 @@ class Line:
         parts = []
         for part in text.split():
             if '=' in part and part != '=':
-                left, right = [x for x in part.split('=')]
-                parts.append(left)
-                parts.append('=')
+                left, right = list(part.split('='))
+                parts.extend((left, '='))
                 if right:
                     parts.append(right)
             else:
@@ -852,15 +844,13 @@ class SpiceParser:
             line_string = line_string.lstrip(' ')
             if line_string.startswith('+'):
                 current_line.append(line_string[1:].strip('\r\n'))
-            else:
-                line_string = line_string.strip('\r\n')
-                if line_string:
-                    _slice = slice(line_index, line_index +1)
-                    line = Line(line_string, _slice, self._end_of_line_comment)
-                    lines.append(line)
-                    # handle case with comment before line continuation
-                    if not line_string.startswith('*'):
-                        current_line = line
+            elif line_string := line_string.strip('\r\n'):
+                _slice = slice(line_index, line_index +1)
+                line = Line(line_string, _slice, self._end_of_line_comment)
+                lines.append(line)
+                # handle case with comment before line continuation
+                if not line_string.startswith('*'):
+                    current_line = line
 
         return lines
 
@@ -883,18 +873,12 @@ class SpiceParser:
 
         title_statement = '.title '
         self._title = str(lines[0])
-        if self._title.startswith(title_statement):
-            self._title = self._title[len(title_statement):]
-
+        self._title = self._title.removeprefix(title_statement)
         # SUBCKT and MODEL files often start with their commands as the
         # first line so they'll parse incorrectly if that line is removed.
         # For everything else, assume the first line is a TITLE line and
         # remove it.
-        if str(lines[0]).startswith(('.model', '.subckt')):
-            start_index = 0
-        else:
-            start_index = 1
-
+        start_index = 0 if str(lines[0]).startswith(('.model', '.subckt')) else 1
         statements = []
         skip_lines = [False]  # True on top of stack means skip lines.
         sub_circuit = None
@@ -943,21 +927,12 @@ class SpiceParser:
                         skip_lines.append(True)
                     else:
                         scope.append(lib)
-                else:
-                    # options param ...
-                    # .global
-                    # .lib filename libname
-                    # .param
-                    # .func .csparam .temp .if
-                    # { expr } are allowed in .model lines and in device lines.
-                    # self._logger.warning('Parser ignored: {}'.format(line))
-                    pass
             else:
                 try:
                     element = Element(line)
                     scope.append(element)
                 except ParseError:
-                    self._logger.warning('Parse error on:\n{}'.format(line))
+                    self._logger.warning(f'Parse error on:\n{line}')
 
         return statements
 
@@ -1034,11 +1009,7 @@ class SpiceParser:
                 source_code += statement.to_python(netlist_name, ground)
             elif isinstance(statement, Include):
                 pass
-            elif isinstance(statement, Model):
-                source_code += statement.to_python(netlist_name)
-            elif isinstance(statement, SubCircuitStatement):
-                source_code += statement.to_python(netlist_name)
-            elif isinstance(statement, Include):
+            elif isinstance(statement, (Model, SubCircuitStatement)):
                 source_code += statement.to_python(netlist_name)
         return source_code
 
@@ -1051,7 +1022,7 @@ class SpiceParser:
         source_code = ''
 
         if self.circuit:
-            source_code += "circuit = Circuit('{}')".format(self._title) + os.linesep
+            source_code += f"circuit = Circuit('{self._title}'){os.linesep}"
         source_code += self.netlist_to_python('circuit', self._statements, ground)
 
         return source_code

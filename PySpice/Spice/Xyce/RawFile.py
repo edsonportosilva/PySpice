@@ -60,7 +60,7 @@ class Variable(VariableAbc):
 
     @staticmethod
     def to_voltage_name(node):
-        return 'v({})'.format(node)
+        return f'v({node})'
 
     ##############################################
 

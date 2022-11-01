@@ -55,14 +55,20 @@ class MyNgSpiceShared(NgSpiceShared):
     ##############################################
 
     def get_vsrc_data(self, voltage, time, node, ngspice_id):
-        self._logger.debug('ngspice_id-{} get_vsrc_data @{} node {}'.format(ngspice_id, time, node))
+        self._logger.debug(
+            f'ngspice_id-{ngspice_id} get_vsrc_data @{time} node {node}'
+        )
+
         voltage[0] = self._amplitude * math.sin(self._pulsation * time)
         return 0
 
     ##############################################
 
     def get_isrc_data(self, current, time, node, ngspice_id):
-        self._logger.debug('ngspice_id-{} get_isrc_data @{} node {}'.format(ngspice_id, time, node))
+        self._logger.debug(
+            f'ngspice_id-{ngspice_id} get_isrc_data @{time} node {node}'
+        )
+
         current[0] = 1.
         return 0
 

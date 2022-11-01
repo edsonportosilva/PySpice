@@ -153,10 +153,9 @@ def EnumFactory(enum_name, enum_tuple):
 
     index = [EnumConstant(name, value) for value, name in enumerate(enum_tuple)]
 
-    obj_dict = {}
-    obj_dict['_size'] = len(enum_tuple)
-    obj_dict['_index'] = index
-    obj_dict.update({str(enum):enum for enum in index})
+    obj_dict = {'_size': len(enum_tuple), '_index': index} | {
+        str(enum): enum for enum in index
+    }
 
     return EnumMetaClass(enum_name, (), obj_dict)
 
@@ -168,8 +167,7 @@ def ExplicitEnumFactory(enum_name, enum_dict):
     *enum_dict* is a dict of constant's names and their values.
     """
 
-    obj_dict = {}
-    obj_dict['constants'] = list(enum_dict.values())
+    obj_dict = {'constants': list(enum_dict.values())}
     for name, value in list(enum_dict.items()):
         obj_dict[name] = EnumConstant(name, value)
 

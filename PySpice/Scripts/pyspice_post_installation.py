@@ -183,7 +183,7 @@ class PySpicePostInstallation:
     ##############################################
 
     def _download_file(self, url, dst_path):
-        print('Get {} ... -> {}'.format(url, dst_path))
+        print(f'Get {url} ... -> {dst_path}')
         response = requests.get(url, allow_redirects=True)
         if response.status_code != requests.codes.ok:
             response.raise_for_status()
@@ -214,7 +214,7 @@ class PySpicePostInstallation:
         with tempfile.TemporaryDirectory() as tmp_directory:
             tmp_directory = Path(tmp_directory)
             url = self.NGSPICE_WINDOWS_DLL_URL.format(self.ngspice_version)
-            zip_path = tmp_directory.joinpath('ngspice-{}_dll_64.zip'.format(self.ngspice_version))
+            zip_path = tmp_directory.joinpath(f'ngspice-{self.ngspice_version}_dll_64.zip')
             dst_path = Path(NgSpice.__file__).parent
             try:
                 self._download_file(url, zip_path)
@@ -224,12 +224,12 @@ class PySpicePostInstallation:
                 self._download_file(url, zip_path)
             with ZipFile(zip_path) as zip_file:
                 zip_file.extractall(path=dst_path)
-                print('Extracted {} in {}'.format(zip_path, dst_path.joinpath('Spice64_dll')))
+                print(f"Extracted {zip_path} in {dst_path.joinpath('Spice64_dll')}")
 
         spice64_path = dst_path.joinpath('Spice64_dll')
         dll_path = spice64_path.joinpath('dll-vs')
         # src = dll_path.joinpath('ngspice-{}.dll'.format(self.ngspice_version))
-        src = 'ngspice-{}.dll'.format(self.ngspice_version)
+        src = f'ngspice-{self.ngspice_version}.dll'
         target = dll_path.joinpath('ngspice.dll')
         # For ngspice version <=31 DLL naming did not contain a version number
         if dll_path.joinpath(src).exists():
@@ -246,14 +246,13 @@ class PySpicePostInstallation:
                 shutil.copy(target.parent.joinpath(src), target)
 
         spinit_path = spice64_path.joinpath('share', 'ngspice', 'scripts', 'spinit')
-        with open(spinit_path) as fh:
-            content = fh.read()
+        content = Path(spinit_path).read_text()
         rule = '='*80
         print(rule)
         print(content)
         print(rule)
         cm_path = spice64_path.joinpath('lib', 'ngspice')
-        content = content.replace('../lib/ngspice/', str(cm_path) + '/')
+        content = content.replace('../lib/ngspice/', f'{str(cm_path)}/')
         print(rule)
         print(content)
         print(rule)
@@ -265,11 +264,11 @@ class PySpicePostInstallation:
     def download_ngspice_manual(self):
         url = self.NGSPICE_MANUAL_URL.format(self.ngspice_version)
         try:
-            self._download_file(url, 'ngspice-manual-{}.pdf'.format(self.ngspice_version))
+            self._download_file(url, f'ngspice-manual-{self.ngspice_version}.pdf')
         except requests.exceptions.HTTPError:
             print('Download failed, trying another URL...')
             url = self.NGSPICE_MANUAL_OLD_URL.format(self.ngspice_version)
-            self._download_file(url, 'ngspice-manual-{}.pdf'.format(self.ngspice_version))
+            self._download_file(url, f'ngspice-manual-{self.ngspice_version}.pdf')
 
     ##############################################
 
@@ -329,7 +328,7 @@ class PySpicePostInstallation:
         try:
             print('Load PySpice module')
             import PySpice
-            print('loaded {} version {}'.format(PySpice.__file__, PySpice.__version__))
+            print(f'loaded {PySpice.__file__} version {PySpice.__version__}')
             print()
         except ModuleNotFoundError:
             print('PySpice module not found')
@@ -362,7 +361,7 @@ class PySpicePostInstallation:
         print('Working directory:', cwd)
         print()
 
-        locale_ngspice = cwd.joinpath('ngspice-{}'.format(NGSPICE_SUPPORTED_VERSION))
+        locale_ngspice = cwd.joinpath(f'ngspice-{NGSPICE_SUPPORTED_VERSION}')
         if locale_ngspice.exists() and locale_ngspice.is_dir():
             print('Found local ngspice:')
             for root, _, filenames in os.walk(locale_ngspice, followlinks=True):
@@ -393,7 +392,7 @@ class PySpicePostInstallation:
             raise NotImplementedError
 
         library_path = ctypes.util.find_library(library)
-        print('Found in library search path: {}'.format(library_path))
+        print(f'Found in library search path: {library_path}')
 
         ##############################################
 
@@ -405,13 +404,13 @@ class PySpicePostInstallation:
             # Apparently there is no simple way to get the path of the loaded library ...
             # But we can look in the process maps
             pid = os.getpid()
-            maps_path = '/proc/{}/maps'.format(pid)
+            maps_path = f'/proc/{pid}/maps'
             with open(maps_path) as fh:
                 for line in fh:
                     if '.so' in line and 'ngspice' in line:
                         parts = [x for x in line.split() if x]
                         path = parts[-1]
-                        print('loaded {}'.format(path))
+                        print(f'loaded {path}')
                         break
         print()
 
@@ -428,7 +427,7 @@ class PySpicePostInstallation:
         print()
 
         command = 'version -f'
-        print('> ' + command)
+        print(f'> {command}')
         print(ngspice.exec_command(command))
         print()
 
@@ -444,7 +443,7 @@ class PySpicePostInstallation:
         import PySpice
         version = PySpice.__version__
 
-        RELEASE_URL = self.GITHUB_URL + '/archive/v{}.zip'.format(version)
+        RELEASE_URL = f'{self.GITHUB_URL}/archive/v{version}.zip'
 
         zip_path = 'examples.zip'
 
@@ -452,16 +451,16 @@ class PySpicePostInstallation:
         dst_path = Path(dst_path).resolve()
         dst_parent = dst_path.parent
         if not dst_parent.exists():
-            print("Directory {} doesn't exists".format(dst_parent))
+            print(f"Directory {dst_parent} doesn't exists")
             return
 
         with tempfile.TemporaryDirectory() as tmp_directory:
             self._download_file(RELEASE_URL, zip_path)
             with ZipFile(zip_path) as zip_file:
                 zip_file.extractall(path=tmp_directory)
-            examples_path = Path(tmp_directory).joinpath('PySpice-{}'.format(version), 'examples')
+            examples_path = Path(tmp_directory).joinpath(f'PySpice-{version}', 'examples')
             shutil.copytree(examples_path, dst_path)
-            print('Extracted examples in {}'.format(dst_path))
+            print(f'Extracted examples in {dst_path}')
 
 ####################################################################################################
 

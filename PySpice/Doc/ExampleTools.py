@@ -43,6 +43,6 @@ def find_libraries():
         # .../PySpice/examples/diode/__example_rst_factory__nlrrr2fh.py .../PySpice/examples
         library_path = os.path.join(examples_root, 'libraries')
 
-    _module_logger.info('SPICE library path is {}'.format(library_path))
+    _module_logger.info(f'SPICE library path is {library_path}')
 
     return library_path

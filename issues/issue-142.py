@@ -50,6 +50,6 @@ circuit = parser.build_circuit()
 source2 = str(circuit)
 for line1, line2 in zip(source.splitlines(), source2.splitlines()):
     print('-'*100)
-    print(line1 + '|')
-    print(line2 + '|')
+    print(f'{line1}|')
+    print(f'{line2}|')
     assert(line1 == line2)

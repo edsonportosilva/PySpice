@@ -59,16 +59,13 @@ def read_readme(file_name):
     # Read and merge includes
     with open(absolut_file_name) as f:
         lines = f.readlines()
-    text = merge_include(lines, doc_path)
-
-    return text
+    return merge_include(lines, doc_path)
 
 ####################################################################################################
 
-if not __file__.endswith('conf.py'):
-    long_description = read_readme('README.txt')
-else:
-    long_description = ''
+long_description = (
+    '' if __file__.endswith('conf.py') else read_readme('README.txt')
+)
 
 ####################################################################################################
 

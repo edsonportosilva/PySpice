@@ -30,7 +30,7 @@ I1 = circuit.I(1, 0, 'p1', 1@u_A)
 V1 = circuit.V(1, 'p1', 'p4', -10@u_V)
 V2 = circuit.V(2, 'p2', 'p3', -10@u_V)
 
-print(str(circuit))
+print(circuit)
 
 simulator = circuit.simulator(simulator='xyce-serial')
 analysis = simulator.operating_point()

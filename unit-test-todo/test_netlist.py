@@ -18,7 +18,14 @@ line_peak_voltage = 10
 
 circuit = Circuit('Simple Rectifier', global_nodes=(0, 'out'))
 circuit.subcircuit(subcircuit_1N4148)
-circuit.V('input', 'in', circuit.gnd, 'DC 0V', 'SIN(0V {}V {}Hz)'.format(line_peak_voltage, frequence))
+circuit.V(
+    'input',
+    'in',
+    circuit.gnd,
+    'DC 0V',
+    f'SIN(0V {line_peak_voltage}V {frequence}Hz)',
+)
+
 circuit.X('D', '1N4148', 'in', 'out')
 circuit.C('load', 'out', circuit.gnd, micro(100))
 circuit.R('load', 'out', circuit.gnd, kilo(1), ac='1k')
@@ -40,5 +47,5 @@ print(circuit.Cload.plus)
 # print circuit.out
 print('\n\n')
 
-print(str(simulation))
+print(simulation)
 # python PySpice/test_netlist.py | ngspice -s > data

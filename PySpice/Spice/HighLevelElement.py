@@ -130,10 +130,14 @@ class SinusoidalMixin(SourceMixinAbc):
 
     def format_spice_parameters(self):
         sin_part = join_list((self.offset, self.amplitude, self.frequency, self.delay, self.damping_factor))
-        return join_list((
-            'DC {} AC {}'.format(*str_spice_list(self.dc_offset, self.ac_magnitude)),
-            'SIN({})'.format(sin_part),
-        ))
+        return join_list(
+            (
+                'DC {} AC {}'.format(
+                    *str_spice_list(self.dc_offset, self.ac_magnitude)
+                ),
+                f'SIN({sin_part})',
+            )
+        )
 
 ####################################################################################################
 
@@ -233,10 +237,7 @@ class PulseMixin(SourceMixinAbc):
         self.period = as_s(period)   # Fixme: protect by setter?
 
         # XSPICE
-        if phase is not None:
-            self.phase = as_s(phase)
-        else:
-            self.phase = None
+        self.phase = as_s(phase) if phase is not None else None
 
         # # Fixme: to func?
         # # Check parameters
@@ -263,13 +264,25 @@ class PulseMixin(SourceMixinAbc):
         #   Warning: vpulse: no DC value, transient time 0 value used
 
         # Fixme: to func?
-        return join_list((
-            'DC {}'.format(str_spice(self.dc_offset)),
-            'PULSE(' +
-            join_list((self.initial_value, self.pulsed_value, self.delay_time,
-                       self.rise_time, self.fall_time, self.pulse_width, self.period,
-                       self.phase)) +
-            ')'))
+        return join_list(
+            (
+                f'DC {str_spice(self.dc_offset)}',
+                'PULSE('
+                + join_list(
+                    (
+                        self.initial_value,
+                        self.pulsed_value,
+                        self.delay_time,
+                        self.rise_time,
+                        self.fall_time,
+                        self.pulse_width,
+                        self.period,
+                        self.phase,
+                    )
+                )
+                + ')',
+            )
+        )
 
 ####################################################################################################
 
@@ -394,10 +407,10 @@ class PieceWiseLinearMixin(SourceMixinAbc):
 
         _ = ""
         if self.dc is not None:
-            _ += "DC {} ".format(str_spice(self.dc))
-        _ += "PWL(" + join_list(self.values)
+            _ += f"DC {str_spice(self.dc)} "
+        _ += f"PWL({join_list(self.values)}"
         if d:
-            _ += " " + join_dict(d)   # OrderedDict(
+            _ += f" {join_dict(d)}"
         _ += ")"
 
         return _
@@ -564,7 +577,7 @@ class RandomMixin(SourceMixinAbc):
         elif self.random_type == 'poisson':
             random_type = 4
         else:
-            raise ValueError("Wrong random type {}".format(self.random_type))
+            raise ValueError(f"Wrong random type {self.random_type}")
 
         # Fixme: to func?
         return ('TRRANDOM(' +

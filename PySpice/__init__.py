@@ -24,4 +24,4 @@ __version__ = '1.5'
 GIT_TAG = 'v1.5'
 
 def show_version():
-    print('PySpice Version {}'.format(__version__))
+    print(f'PySpice Version {__version__}')

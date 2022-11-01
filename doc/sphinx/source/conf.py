@@ -38,8 +38,6 @@ try:
     import sphinx_rtd_theme
 except:
     logger.warning('Failed to import sphinx_rtd_theme')
-    pass
-
 import PySpice
 
 ####################################################################################################

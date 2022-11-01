@@ -115,13 +115,14 @@ def exit_callback(exit_status, immediate_unloding, quit_exit, ngspice_id, user_d
 
 @ffi.callback("int (pvecvaluesall, int, int, void *)")
 def send_data_callback(data, number_of_vectors, ngspice_id, user_data):
-    print(">>> send_data [{}]".format(data.vecindex))
+    print(f">>> send_data [{data.vecindex}]")
 
     for i in range(int(number_of_vectors)):
         actual_vector_value = data.vecsa[i]
-        print("    Vector: {} {} +i {}".format(ffi.string(actual_vector_value.name),
-                                               actual_vector_value.creal,
-                                               actual_vector_value.cimag))
+        print(
+            f"    Vector: {ffi.string(actual_vector_value.name)} {actual_vector_value.creal} +i {actual_vector_value.cimag}"
+        )
+
 
     return 0
 #send_data_callback = ffi.NULL
@@ -138,7 +139,7 @@ def send_init_data_callback(data,  ngspice_id, user_data):
 
 @ffi.callback("int (double *, double, char *, int, void *)")
 def get_vsrc_data(voltage, time, node, ngspice_id, user_data):
-    print(">>> get_vsrc_data @{} node {}".format(time, ffi.string(node)))
+    print(f">>> get_vsrc_data @{time} node {ffi.string(node)}")
     voltage[0] = 1.
     return 0
 
@@ -161,13 +162,13 @@ time_step = '100u'
 
 circuit = [
     ".title rc circuit",
-    # "V1 1 0 1",
     "V1 1 0 dc 0 external",
     "R1 1 2 1",
     "C1 2 0 1 ic=0",
-    ".tran {} 3 uic".format(time_step),
+    f".tran {time_step} 3 uic",
     ".end",
 ]
+
 
 # for line in circuit:
 #     rc = ngspice_shared.ngSpice_Command(('circbyline ' + line).encode('utf8'))
@@ -198,28 +199,24 @@ while (True):
 plot_name = 'tran1'
 all_vectors = ngspice_shared.ngSpice_AllVecs(plot_name.encode('utf8'))
 i = 0
-while (True):
-    if all_vectors[i] == ffi.NULL:
-        break
+while all_vectors[i] != ffi.NULL:
+    vector_name = ffi.string(all_vectors[i])
+    name = '.'.join((plot_name, vector_name.decode('utf8')))
+    vector_info = ngspice_shared.ngGet_Vec_Info(name.encode('utf8'))
+    length = vector_info.v_length
+    print(
+        f"vector[{i}] {vector_name} type {vector_info.v_type} flags {vector_info.v_flags} length {length}"
+    )
+
+    if vector_info.v_compdata == ffi.NULL:
+        print("  real data")
+        # for k in range(length):
+        #     print("  [{}] {}".format(k, vector_info.v_realdata[k]))
+        real_array = np.frombuffer(ffi.buffer(vector_info.v_realdata, length*8), dtype=np.float64)
+        print(real_array)
     else:
-        vector_name = ffi.string(all_vectors[i])
-        name = '.'.join((plot_name, vector_name.decode('utf8')))
-        vector_info = ngspice_shared.ngGet_Vec_Info(name.encode('utf8'))
-        length = vector_info.v_length
-        print("vector[{}] {} type {} flags {} length {}".format(i,
-                                                                vector_name,
-                                                                vector_info.v_type,
-                                                                vector_info.v_flags,
-                                                                length))
-        if vector_info.v_compdata == ffi.NULL:
-            print("  real data")
-            # for k in range(length):
-            #     print("  [{}] {}".format(k, vector_info.v_realdata[k]))
-            real_array = np.frombuffer(ffi.buffer(vector_info.v_realdata, length*8), dtype=np.float64)
-            print(real_array)
-        else:
-            print("  complex data")
-            for k in range(length):
-                value = vector_info.v_compdata[k]
-                print("  [{}] {} + i {}".format(k, value.cx_real, value.cx_imag))
+        print("  complex data")
+        for k in range(length):
+            value = vector_info.v_compdata[k]
+            print(f"  [{k}] {value.cx_real} + i {value.cx_imag}")
     i += 1

@@ -50,7 +50,7 @@ def run_shasum(filename, algorithm=1, text=False, binary=False, portable=False):
     if algorithm not in (1, 224, 256, 384, 512, 512224, 512256):
         raise ValueError
 
-    args = ['shasum', '--algorithm=' + str(algorithm)]
+    args = ['shasum', f'--algorithm={str(algorithm)}']
     if text:
         args.append('--text')
     elif binary:
@@ -59,9 +59,7 @@ def run_shasum(filename, algorithm=1, text=False, binary=False, portable=False):
         args.append('--portable')
     args.append(filename)
     output = subprocess.check_output(args)
-    shasum = output[:output.find(' ')]
-
-    return shasum
+    return output[:output.find(' ')]
 
 ####################################################################################################
 
@@ -276,10 +274,7 @@ class File(Path):
     @property
     def shasum(self):
 
-        if self._shasum is None:
-            return self.compute_shasum()
-        else:
-            return self._shasum
+        return self.compute_shasum() if self._shasum is None else self._shasum
 
     ##############################################
 

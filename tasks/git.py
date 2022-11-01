@@ -61,7 +61,7 @@ def get_commits(ctx):
     # GIT_SORT_TOPOLOGICAL. Sort the repository contents in topological order (parents before children);
     # this sorting mode can be combined with time sorting.
     sorting = git.GIT_SORT_TOPOLOGICAL   # git.GIT_SORT_TIME
-    commits = [commit for commit in repository.walk(head_commit.id, sorting)]   # Fixme:
+    commits = list(repository.walk(head_commit.id, sorting))
 
     template = '''
 ====================================================================================================

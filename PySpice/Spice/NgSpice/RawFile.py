@@ -191,8 +191,11 @@ class RawFile(RawFileAbc):
 
         self.circuit_name = self._read_header_field_line(header_line_iterator, 'Circuit')
         self.temperature, self.nominal_temperature = self._read_temperature_line(header_line_iterator)
-        self.warnings = [self._read_header_field_line(header_line_iterator, 'Warning')
-                         for i in range(stdout.count(b'Warning'))]
+        self.warnings = [
+            self._read_header_field_line(header_line_iterator, 'Warning')
+            for _ in range(stdout.count(b'Warning'))
+        ]
+
         for warning in self.warnings:
             self._logger.warn(warning)
         self.title = self._read_header_field_line(header_line_iterator, 'Title')

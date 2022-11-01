@@ -42,13 +42,12 @@ def str_spice(obj, unit=True):
 
     """Convert an object to a Spice compatible string."""
 
-    if isinstance(obj, UnitValue):
-        if unit:
-            return obj.str_spice()
-        else: # Fixme: ok ???
-            return obj.str(spice=False, space=False, unit=False)
-    else:
+    if not isinstance(obj, UnitValue):
         return str(obj)
+    if unit:
+        return obj.str_spice()
+    else: # Fixme: ok ???
+        return obj.str(spice=False, space=False, unit=False)
 
 ####################################################################################################
 
@@ -71,14 +70,17 @@ def join_list(items):
     values = []
     for item in items:
         if item is not None:
-            str_value = str_spice(item)
-            if str_value:
+            if str_value := str_spice(item):
                 values.append(str_value)
     return ' '.join(values)
 
 ####################################################################################################
 
 def join_dict(d):
-    return ' '.join(["{}={}".format(key, str_spice(value))
-                     for key, value in sorted(d.items())
-                     if value is not None])
+    return ' '.join(
+        [
+            f"{key}={str_spice(value)}"
+            for key, value in sorted(d.items())
+            if value is not None
+        ]
+    )

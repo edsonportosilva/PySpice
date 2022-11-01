@@ -44,11 +44,11 @@ def conda_login(ctx):
     with open(path) as fh:
         username = fh.readline().strip()
         password = fh.readline().strip()
-    print('"{}" "{}"'.format(username, password))
-    ctx.run('anaconda login --username="{}" --password="{}"'.format(username, password))
+    print(f'"{username}" "{password}"')
+    ctx.run(f'anaconda login --username="{username}" --password="{password}"')
 
 @task(conda_build, conda_login)
 def conda_upload(ctx):
     result = ctx.run('conda build . --output')
     path = str(result.stdout).strip()
-    ctx.run('anaconda upload {}'.format(path))
+    ctx.run(f'anaconda upload {path}')

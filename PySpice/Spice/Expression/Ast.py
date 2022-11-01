@@ -380,7 +380,7 @@ class If: #(TernaryExpression)
 
     def __str__(self):
 
-        return '{} ? {} : {}'.format(self._condition, self._then_expression, self._else_expression)
+        return f'{self._condition} ? {self._then_expression} : {self._else_expression}'
 
 ####################################################################################################
 
@@ -404,4 +404,4 @@ class Function(Expression):
     def __str__(self):
 
         parameters = ', '.join([str(operand) for operand in self.iter_on_operands()])
-        return self._name + ' (' + parameters  + ')'
+        return f'{self._name} ({parameters})'

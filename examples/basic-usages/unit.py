@@ -51,7 +51,7 @@ circuit = Circuit('Resistor Bridge')
 
 resistance = 10@u_kΩ
 print(float(resistance))
-print(str(resistance))
+print(resistance)
 
 circuit.V('input', 1, circuit.gnd, 10@u_V)
 circuit.R(1, 1, 2, 2@u_kΩ)
@@ -72,7 +72,7 @@ resistance = 10*u.kΩ
 print(resistance.magnitude)
 print(resistance.m)
 print(resistance.units)
-print(str(resistance))
+print(resistance)
 
 circuit = Circuit('Resistor Bridge')
 

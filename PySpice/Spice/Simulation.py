@@ -294,10 +294,10 @@ class MeasureParameters(AnalysisParameters):
     def __init__(self, analysis_type, name, *args):
 
         _analysis_type = str(analysis_type).upper()
-        if _analysis_type not in ('AC', 'DC', 'OP', 'TRAN', 'TF', 'NOISE'):
-            raise ValueError('Incorrect analysis type {}'.format(analysis_type))
-
-        self._parameters = [_analysis_type, name, *args]
+        if _analysis_type in {'AC', 'DC', 'OP', 'TRAN', 'TF', 'NOISE'}:
+            self._parameters = [_analysis_type, name, *args]
+        else:
+            raise ValueError(f'Incorrect analysis type {analysis_type}')
 
     ##############################################
 
@@ -978,7 +978,7 @@ class CircuitSimulation:
         if variation not in ('dec', 'lin', 'oct'):
             raise NameError("variation must be 'dec' or 'lin' or 'oct'")
 
-        output = 'V({},{})'.format(output_node, ref_node)
+        output = f'V({output_node},{ref_node})'
 
         self._add_analysis(
             NoiseAnalysisParameters(output, src, variation, points, start_frequency, stop_frequency, points_per_summary)
@@ -1069,18 +1069,14 @@ class CircuitSimulation:
     def str_options(self, unit=True):
 
         # Fixme: use cls settings ???
-        if unit:
-            _str = str_spice
-        else:
-            _str = lambda x: str_spice(x, unit)
-
+        _str = str_spice if unit else (lambda x: str_spice(x, unit))
         netlist = ''
         if self.options:
             for key, value in self._options.items():
                 if value is not None:
-                    netlist += '.options {} = {}'.format(key, _str(value)) + os.linesep
+                    netlist += f'.options {key} = {_str(value)}{os.linesep}'
                 else:
-                    netlist += '.options {}'.format(key) + os.linesep
+                    netlist += f'.options {key}{os.linesep}'
         return netlist
 
     ##############################################
@@ -1090,9 +1086,9 @@ class CircuitSimulation:
         netlist = self._circuit.str(simulator=self.SIMULATOR)
         netlist += self.str_options()
         if self._initial_condition:
-            netlist += '.ic ' + join_dict(self._initial_condition) + os.linesep
+            netlist += f'.ic {join_dict(self._initial_condition)}{os.linesep}'
         if self._node_set:
-            netlist += '.nodeset ' + join_dict(self._node_set) + os.linesep
+            netlist += f'.nodeset {join_dict(self._node_set)}{os.linesep}'
 
         if self._saved_nodes:
             # Place 'all' first
@@ -1102,12 +1098,12 @@ class CircuitSimulation:
                 saved_nodes.remove('all')
             else:
                 all_str = ''
-            netlist += '.save ' + all_str + join_list(saved_nodes) + os.linesep
+            netlist += f'.save {all_str}{join_list(saved_nodes)}{os.linesep}'
         for measure_parameters in self._measures:
             netlist += str(measure_parameters) + os.linesep
         for analysis_parameters in self._analyses.values():
             netlist += str(analysis_parameters) + os.linesep
-        netlist += '.end' + os.linesep
+        netlist += f'.end{os.linesep}'
         return netlist
 
 ####################################################################################################
@@ -1182,7 +1178,7 @@ class CircuitSimulator(CircuitSimulation):
         method = getattr(CircuitSimulation, analysis_method)
         method(self, *args, **_kwargs)
 
-        message = 'desk' + os.linesep + str(self)
+        message = f'desk{os.linesep}{str(self)}'
         if kwargs.get('log_desk', False):
             self._logger.info(message)
         else:

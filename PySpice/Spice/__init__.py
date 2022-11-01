@@ -33,13 +33,13 @@ _module_logger = logging.getLogger(__name__)
 ####################################################################################################
 
 def _get_elements(module):
-    element_classes = []
-    for item  in module.__dict__.values():
-        if (type(item) is ElementParameterMetaClass
-            and item.PREFIX is not None
-           ):
-            element_classes.append(item)
-    return element_classes
+    return [
+        item
+        for item in module.__dict__.values()
+        if (
+            type(item) is ElementParameterMetaClass and item.PREFIX is not None
+        )
+    ]
 
 ####################################################################################################
 #

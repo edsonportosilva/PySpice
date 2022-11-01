@@ -283,7 +283,7 @@ class Plot(dict):
         elif self.plot_name.startswith('tf'):
             return self._to_transfer_function_analysis()
         else:
-            raise NotImplementedError("Unsupported plot name {}".format(self.plot_name))
+            raise NotImplementedError(f"Unsupported plot name {self.plot_name}")
 
     ##############################################
 
@@ -407,9 +407,8 @@ class NgSpiceShared:
     @classmethod
     def setup_platform(cls):
 
-        if ConfigInstall.OS.on_windows:
-            if platform.architecture()[0] != '64bit':
-                raise NameError('Windows 32bit is no longer supported by NgSpice')
+        if ConfigInstall.OS.on_windows and platform.architecture()[0] != '64bit':
+            raise NameError('Windows 32bit is no longer supported by NgSpice')
 
         _ = os.environ.get('NGSPICE_LIBRARY_PATH', None)
         if _ is not None:
@@ -440,15 +439,12 @@ class NgSpiceShared:
     def new_instance(cls, ngspice_id=0, send_data=False, verbose=False):
         """Create a NgSpiceShared instance"""
 
-        # Fixme: send_data
-
         if ngspice_id in cls._instances:
             return cls._instances[ngspice_id]
-        else:
-            cls._logger.debug("New instance for id {}".format(ngspice_id))
-            instance = cls(ngspice_id=ngspice_id, send_data=send_data, verbose=verbose)
-            cls._instances[ngspice_id] = instance
-            return instance
+        cls._logger.debug(f"New instance for id {ngspice_id}")
+        instance = cls(ngspice_id=ngspice_id, send_data=send_data, verbose=verbose)
+        cls._instances[ngspice_id] = instance
+        return instance
 
     ##############################################
 
@@ -492,10 +488,7 @@ class NgSpiceShared:
     @property
     def library_path(self):
         if self._library_path is None:
-            if not self._ngspice_id:
-                library_prefix = ''
-            else:
-                library_prefix = '{}'.format(self._ngspice_id)  # id =
+            library_prefix = f'{self._ngspice_id}' if self._ngspice_id else ''
             library_path = self.LIBRARY_PATH.format(library_prefix)
             self._library_path = library_path
         return self._library_path
@@ -504,15 +497,9 @@ class NgSpiceShared:
 
     def _load_library(self, verbose):
 
-        if ConfigInstall.OS.on_windows:
-            # https://sourceforge.net/p/ngspice/discussion/133842/thread/1cece652/#4e32/5ab8/9027
-            # When environment variable SPICE_LIB_DIR is empty, ngspice looks in C:\Spice64\share\ngspice\scripts
-            # Else it tries %SPICE_LIB_DIR%\scripts\spinit
-            if 'SPICE_LIB_DIR' not in os.environ:
-                _ = str(Path(self.NGSPICE_PATH).joinpath('share', 'ngspice'))
-                os.environ['SPICE_LIB_DIR'] = _
-                # self._logger.warning('Set SPICE_LIB_DIR = %s', _)
-
+        if ConfigInstall.OS.on_windows and 'SPICE_LIB_DIR' not in os.environ:
+            _ = str(Path(self.NGSPICE_PATH).joinpath('share', 'ngspice'))
+            os.environ['SPICE_LIB_DIR'] = _
         # Fixme: not compatible with supra
         # if 'CONDA_PREFIX' in os.environ:
         #     _ = str(Path(os.environ['CONDA_PREFIX']).joinpath('share', 'ngspice'))
@@ -532,7 +519,7 @@ class NgSpiceShared:
         with open(api_path) as fh:
             ffi.cdef(fh.read())
 
-        message = 'Load library {}'.format(self.library_path)
+        message = f'Load library {self.library_path}'
         self._logger.debug(message)
         if verbose:
             print(message)
@@ -563,25 +550,27 @@ class NgSpiceShared:
         self_c = ffi.new_handle(self)
         self._self_c = self_c  # To prevent garbage collection
 
-        rc = self._ngspice_shared.ngSpice_Init(self._send_char_c,
-                                               self._send_stat_c,
-                                               self._exit_c,
-                                               self._send_data_c,
-                                               self._send_init_data_c,
-                                               self._background_thread_running_c,
-                                               self_c)
-        if rc:
-            raise NameError("Ngspice_Init returned {}".format(rc))
+        if rc := self._ngspice_shared.ngSpice_Init(
+            self._send_char_c,
+            self._send_stat_c,
+            self._exit_c,
+            self._send_data_c,
+            self._send_init_data_c,
+            self._background_thread_running_c,
+            self_c,
+        ):
+            raise NameError(f"Ngspice_Init returned {rc}")
 
         ngspice_id_c = ffi.new('int *', self._ngspice_id)
         self._ngspice_id = ngspice_id_c  # To prevent garbage collection
-        rc = self._ngspice_shared.ngSpice_Init_Sync(self._get_vsrc_data_c,
-                                                    self._get_isrc_data_c,
-                                                    FFI.NULL,  # GetSyncData
-                                                    ngspice_id_c,
-                                                    self_c)
-        if rc:
-            raise NameError("Ngspice_Init_Sync returned {}".format(rc))
+        if rc := self._ngspice_shared.ngSpice_Init_Sync(
+            self._get_vsrc_data_c,
+            self._get_isrc_data_c,
+            FFI.NULL,  # GetSyncData
+            ngspice_id_c,
+            self_c,
+        ):
+            raise NameError(f"Ngspice_Init_Sync returned {rc}")
 
         self._get_version()
 
@@ -590,7 +579,7 @@ class NgSpiceShared:
         except KeyError:
             # See SimulationType.py
             self._simulation_type = EnumFactory('SimulationType', SIMULATION_TYPE['last'])
-            self._logger.warning("Unsupported Ngspice version {}".format(self._ngspice_version))
+            self._logger.warning(f"Unsupported Ngspice version {self._ngspice_version}")
         self._type_to_unit = {
             self._simulation_type.time: u_s,
             self._simulation_type.voltage: u_V,
@@ -653,11 +642,10 @@ class NgSpiceShared:
     def _exit(exit_status, immediate_unloding, quit_exit, ngspice_id, user_data):
         """Callback for asking for a reaction after controlled exit"""
         self = ffi.from_handle(user_data)
-        self._logger.debug('ngspice_id-{} exit status={} immediate_unloding={} quit_exit={}'.format(
-            ngspice_id,
-            exit_status,
-            immediate_unloding,
-            quit_exit))
+        self._logger.debug(
+            f'ngspice_id-{ngspice_id} exit status={exit_status} immediate_unloding={immediate_unloding} quit_exit={quit_exit}'
+        )
+
         return exit_status
 
     ##############################################
@@ -695,7 +683,10 @@ class NgSpiceShared:
     def _background_thread_running(is_running, ngspice_id, user_data):
         """Callback to indicate if background thread is runnin"""
         self = ffi.from_handle(user_data)
-        self._logger.debug('ngspice_id-{} background_thread_running {}'.format(ngspice_id, is_running))
+        self._logger.debug(
+            f'ngspice_id-{ngspice_id} background_thread_running {is_running}'
+        )
+
         self._is_running = is_running
 
     ##############################################
@@ -744,14 +735,20 @@ class NgSpiceShared:
 
     def get_vsrc_data(self, voltage, time, node, ngspice_id):
         """ Reimplement this callback in a subclass to provide external voltage source. """
-        self._logger.debug('ngspice_id-{} get_vsrc_data @{} node {}'.format(ngspice_id, time, node))
+        self._logger.debug(
+            f'ngspice_id-{ngspice_id} get_vsrc_data @{time} node {node}'
+        )
+
         return 0
 
     ##############################################
 
     def get_isrc_data(self, current, time, node, ngspice_id):
         """ Reimplement this callback in a subclass to provide external current source. """
-        self._logger.debug('ngspice_id-{} get_isrc_data @{} node {}'.format(ngspice_id, time, node))
+        self._logger.debug(
+            f'ngspice_id-{ngspice_id} get_isrc_data @{time} node {node}'
+        )
+
         return 0
 
     ##############################################
@@ -760,9 +757,7 @@ class NgSpiceShared:
     def _convert_string_array(array):
         strings = []
         i = 0
-        while True:
-            if array[i] == FFI.NULL:
-                break
+        while array[i] != FFI.NULL:
             strings.append(ffi_string_utf8(array[i]))
             i += 1
         return strings
@@ -785,12 +780,11 @@ class NgSpiceShared:
     @staticmethod
     def _lines_to_dicts(lines):
         if lines:
-            values = dict(description=lines[0])
-            values.update({
+            return dict(description=lines[0]) | {
                 parts[0]: NgSpiceShared._to_python(parts[1])
                 for parts in map(str.split, lines)
-            })
-            return values
+            }
+
         else:
             raise ValueError
 
@@ -835,25 +829,23 @@ class NgSpiceShared:
         self._number_of_exec_calls += 1
 
         if len(command) > self.MAX_COMMAND_LENGTH:
-            raise ValueError('Command must not exceed {} characters'.format(self.MAX_COMMAND_LENGTH))
+            raise ValueError(
+                f'Command must not exceed {self.MAX_COMMAND_LENGTH} characters'
+            )
 
-        self._logger.debug('Execute command: {}'.format(command))
+
+        self._logger.debug(f'Execute command: {command}')
 
         self.clear_output()
 
         encoded_command = command.encode('ascii')
-        rc = self._ngspice_shared.ngSpice_Command(encoded_command)
-
-        if rc:  # Fixme: when not 0 ???
-            raise NameError("ngSpice_Command '{}' returned {}".format(command, rc))
+        if rc := self._ngspice_shared.ngSpice_Command(encoded_command):
+            raise NameError(f"ngSpice_Command '{command}' returned {rc}")
 
         if self._error_in_stdout or self._error_in_stderr:
-            raise NgSpiceCommandError("Command '{}' failed".format(command))
+            raise NgSpiceCommandError(f"Command '{command}' failed")
 
-        if join_lines:
-            return self.stdout
-        else:
-            return self._stdout
+        return self.stdout if join_lines else self._stdout
 
     ##############################################
 
@@ -868,7 +860,7 @@ class NgSpiceShared:
         for line in output.split('\n'):
             match = re.match(r'\*\* ngspice\-(\d+)', line)
             if match is not None:
-                self._ngspice_version = int(match.group(1))
+                self._ngspice_version = int(match[1])
             # if '** XSPICE extensions included' in line:
             if '** XSPICE' in line:
                 self._has_xspice = True
@@ -919,7 +911,7 @@ class NgSpiceShared:
         for key, value in kwargs.items():
             if isinstance(value, (list, tuple)):
                 value = '[ ' + ' '.join(value) + ' ]'
-            cmd = '{} {} {} = {}'.format(command, device_name, key, value)
+            cmd = f'{command} {device_name} {key} = {value}'
             # performance optimization: collect multiple alter commands and
             #                           dispatch them jointly
             commands.append(cmd)
@@ -947,57 +939,55 @@ class NgSpiceShared:
 
     def delete(self, debug_number):
         """Remove a trace or breakpoint"""
-        self.exec_command('delete {}'.format(debug_number))
+        self.exec_command(f'delete {debug_number}')
 
     ##############################################
 
     def destroy(self, plot_name='all'):
         """Release the memory holding the output data (the given plot or all plots) for the specified runs."""
-        self.exec_command('destroy ' + plot_name)
+        self.exec_command(f'destroy {plot_name}')
 
     ##############################################
 
     def device_help(self, device):
         """Shows the user information about the devices available in the simulator. """
-        return self.exec_command('devhelp ' + device.lower())
+        return self.exec_command(f'devhelp {device.lower()}')
 
     ##############################################
 
     def save(self, vector):
-        self.exec_command('save ' + vector)
+        self.exec_command(f'save {vector}')
 
     ##############################################
 
     def _show(self, command):
-        lines = self.exec_command(command, join_lines=False)
-        if lines:
-            values = self._lines_to_dicts(lines)
-            return values
+        if lines := self.exec_command(command, join_lines=False):
+            return self._lines_to_dicts(lines)
         else:
             return ''
 
     ##############################################
 
     def show(self, device):
-        return self._show('show ' + device.lower())
+        return self._show(f'show {device.lower()}')
 
     ##############################################
 
     def showmod(self, device):
-        return self._show('showmod ' + device.lower())
+        return self._show(f'showmod {device.lower()}')
 
     ##############################################
 
     def source(self, file_path):
         """Read a ngspice input file"""
-        self.exec_command('source ' + file_path)
+        self.exec_command(f'source {file_path}')
 
     ##############################################
 
     def option(self, **kwargs):
         """Set any of the simulator variables."""
         for key, value in kwargs.items():
-            self.exec_command('option {} = {}'.format(key, value))
+            self.exec_command(f'option {key} = {value}')
 
     ##############################################
 
@@ -1063,10 +1053,7 @@ class NgSpiceShared:
         lines = self.exec_command(command, join_lines=False)
         values = {}
         for line in lines:
-            if '=' in line:
-                parts = line.split(' = ')
-            else:
-                parts = line.split(': ')
+            parts = line.split(' = ') if '=' in line else line.split(': ')
             values[parts[0]] = NgSpiceShared._to_python(parts[1])
         return values
 
@@ -1075,15 +1062,15 @@ class NgSpiceShared:
     def set(self, *args, **kwargs):
         """Set the value of variables"""
         for key in args:
-            self.exec_command('set {}'.format(key))
+            self.exec_command(f'set {key}')
         for key, value in kwargs.items():
-            self.exec_command('option {} = {}'.format(key, value))
+            self.exec_command(f'option {key} = {value}')
 
     ##############################################
 
     def set_circuit(self, name):
         """Change the current circuit"""
-        self.exec_command('setcirc {}'.format(name))
+        self.exec_command(f'setcirc {name}')
 
     ##############################################
 
@@ -1096,7 +1083,7 @@ class NgSpiceShared:
     def step(self, number_of_steps=None):
         """Run a fixed number of time-points"""
         if number_of_steps is not None:
-            self.exec_command('step {}'.format(number_of_steps))
+            self.exec_command(f'step {number_of_steps}')
         else:
             self.exec_command('step')
 
@@ -1116,9 +1103,9 @@ class NgSpiceShared:
 
         command = 'stop'
         if 'after' in kwargs:
-            command += ' after {}'.format(kwargs['after'])
+            command += f" after {kwargs['after']}"
         for condition in args:
-            command += ' when {}'.format(condition)
+            command += f' when {condition}'
         self.exec_command(command)
 
     ##############################################
@@ -1132,7 +1119,7 @@ class NgSpiceShared:
     def unset(self, *args):
         """Unset variables"""
         for key in args:
-            self.exec_command('unset {}'.format(key))
+            self.exec_command(f'unset {key}')
 
     ##############################################
 
@@ -1158,10 +1145,8 @@ class NgSpiceShared:
         circuit_lines_keepalive += [FFI.NULL]
         circuit_array = ffi.new("char *[]", circuit_lines_keepalive)
         self.clear_output()
-        rc = self._ngspice_shared.ngSpice_Circ(circuit_array)
-
-        if rc:  # Fixme: when not 0 ???
-            raise NameError("ngSpice_Circ returned {}".format(rc))
+        if rc := self._ngspice_shared.ngSpice_Circ(circuit_array):
+            raise NameError(f"ngSpice_Circ returned {rc}")
 
         # Fixme: when Ngspice found an error in the circuit, it reports the error in stdout
         # Fixme: https://sourceforge.net/p/ngspice/bugs/496/
@@ -1277,10 +1262,7 @@ class NgSpiceShared:
         plot = Plot(simulation, plot_name)
         all_vectors_c = self._ngspice_shared.ngSpice_AllVecs(plot_name.encode('utf8'))
         i = 0
-        while True:
-            if all_vectors_c[i] == FFI.NULL:
-                break
-
+        while all_vectors_c[i] != FFI.NULL:
             vector_name = ffi_string_utf8(all_vectors_c[i])
             name = '.'.join((plot_name, vector_name))
             vector_info = self._ngspice_shared.ngGet_Vec_Info(name.encode('utf8'))
@@ -1308,7 +1290,7 @@ class NgSpiceShared:
                 #     print(ffi.addressof(value, field='cx_real'), ffi.addressof(value, field='cx_imag'))
                 #     print("  [{}] {} + i {}".format(k, value.cx_real, value.cx_imag))
                 tmp_array = np.frombuffer(ffi.buffer(vector_info.v_compdata, length*8*2), dtype=np.float64)
-                array = np.array(tmp_array[0::2], dtype=np.complex128)
+                array = np.array(tmp_array[::2], dtype=np.complex128)
                 array.imag = tmp_array[1::2]
             plot[vector_name] = Vector(self, vector_name, vector_type, array)
 
