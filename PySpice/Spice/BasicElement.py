@@ -177,9 +177,13 @@ class SubCircuitElement(NPinElement):
 
     def copy_to(self, netlist):
 
-        element = self.__class__(netlist, self._name, self.subcircuit_name, *self.node_names, **self.parameters)
-        # Element.copy_to(self, element)
-        return element
+        return self.__class__(
+            netlist,
+            self._name,
+            self.subcircuit_name,
+            *self.node_names,
+            **self.parameters
+        )
 
     ##############################################
 
@@ -188,7 +192,7 @@ class SubCircuitElement(NPinElement):
 
         spice_parameters = super().format_spice_parameters()
         if self.parameters:
-            spice_parameters += ' ' + join_dict(self.parameters)
+            spice_parameters += f' {join_dict(self.parameters)}'
 
         return spice_parameters
 
@@ -676,11 +680,11 @@ class CoupledInductor(AnyPinElement):
                 self.netlist.element(inductor)
             except KeyError:
                 try:
-                    inductor = 'L' + inductor
+                    inductor = f'L{inductor}'
                     self.netlist.element(inductor)
-                    self._logger.info('Prefixed element {}'.format(inductor))
+                    self._logger.info(f'Prefixed element {inductor}')
                 except KeyError:
-                    raise ValueError('Element with name {} not found'.format(inductor))
+                    raise ValueError(f'Element with name {inductor} not found')
             # Fixme: str or Element instance ?
             self._inductors.append(inductor)
         self.inductor1, self.inductor2 = self._inductors
@@ -1024,8 +1028,8 @@ class NonLinearVoltageSource(DipoleElement):
 
         super().__init__(name, *args, **kwargs)
 
-        self.expression = kwargs.get('expression', None)
-        self.table = kwargs.get('table', None)
+        self.expression = kwargs.get('expression')
+        self.table = kwargs.get('table')
 
     ##############################################
 
@@ -1035,7 +1039,7 @@ class NonLinearVoltageSource(DipoleElement):
         # Fixme: expression
         if self.table is not None:
             # TABLE {expression} = (x0, y0) (x1, y1) ...
-            table = ['({}, {})'.format(str_spice(x), str_spice(y)) for x, y in self.table]
+            table = [f'({str_spice(x)}, {str_spice(y)})' for x, y in self.table]
             spice_element += ' TABLE {%s} = %s' % (self.expression, join_list(table))
         return spice_element
 

@@ -94,7 +94,7 @@ class NgSpiceSharedCircuitSimulator(NgSpiceCircuitSimulator):
 
         super().__init__(circuit, pipe=False, **kwargs)
 
-        ngspice_shared = kwargs.get('ngspice_shared', None)
+        ngspice_shared = kwargs.get('ngspice_shared')
         if ngspice_shared is None:
             self._ngspice_shared = NgSpiceShared.new_instance()
         else:

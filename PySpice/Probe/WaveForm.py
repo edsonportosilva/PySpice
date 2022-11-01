@@ -157,10 +157,7 @@ class WaveForm(UnitValues):
 
     @title.setter
     def title(self, value):
-        if value is not None:
-            self._title = str(value)
-        else:
-            self._title = None
+        self._title = str(value) if value is not None else None
 
     ##############################################
 
@@ -170,10 +167,7 @@ class WaveForm(UnitValues):
     ##############################################
 
     def __str__(self):
-        if self._title is not None:
-            return self._title
-        else:
-            return self._name
+        return self._title if self._title is not None else self._name
 
     ##############################################
 

@@ -85,7 +85,7 @@ class XyceServer:
         simulation_failed = False
         warning_found = False
         lines = stdout.splitlines()
-        for line_index, line in enumerate(lines):
+        for line in lines:
             if line.startswith(b'Netlist warning'):
                 warning_found = True
                 # Fixme: highlight warnings
@@ -119,7 +119,7 @@ class XyceServer:
             f.write(str(spice_input))
 
         command = (self._xyce_command, '-r', output_filename, input_filename)
-        self._logger.info('Run {}'.format(' '.join(command)))
+        self._logger.info(f"Run {' '.join(command)}")
         process = subprocess.Popen(
             command,
             stdin=subprocess.PIPE,

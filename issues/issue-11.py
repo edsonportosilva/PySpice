@@ -19,7 +19,7 @@ summer.BehavorialSource(2, 3, summer.gnd, voltage_expression='{K1}*V(1) + {K2}*V
 print(summer.B1.v)
 print(summer.B1.voltage_expression)
 
-print(str(summer))
+print(summer)
 
 ####################################################################################################
 #

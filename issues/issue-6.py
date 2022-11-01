@@ -22,7 +22,7 @@ gain.VCVS(1, 1, 0, 2, 0, '{K}')
 circuit.subcircuit(gain)
 circuit.X(2, 'GAIN', 7, 6, K=milli(50))
 
-print(str(circuit))
+print(circuit)
 
 ####################################################################################################
 #

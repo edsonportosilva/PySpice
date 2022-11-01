@@ -86,10 +86,7 @@ def make_examples(ctx, clean=False, no_html=False, force=False):
     #                 '--config', str(setting_path))
     # )
     print('Generate RST examples files')
-    command = [
-        'pyterate',
-        '--config={}'.format(setting_path),
-    ]
+    command = ['pyterate', f'--config={setting_path}']
     if force:
         command.append('--force')
     ctx.run(' '.join(command))

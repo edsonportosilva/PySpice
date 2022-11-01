@@ -105,7 +105,7 @@ class TestUnits(unittest.TestCase):
 
         print_rule()
         waveform4 = waveform3.convert(U_uV)
-        logger.info('{} {}'.format(waveform4, type(waveform4)))
+        logger.info(f'{waveform4} {type(waveform4)}')
 
         print_rule()
         # Fixme:

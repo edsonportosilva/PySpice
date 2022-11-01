@@ -768,9 +768,9 @@ class TemplatePage:
     def __init__(self, name, template_name, title=None):
         self.name = name
         self.title = title or name
-        self.src = 'src/{}.html'.format(template_name)
-        self.dst = 'pages/{}.html'.format(template_name)
-        self.dst_url = '/' + self.dst # SITEURL +
+        self.src = f'src/{template_name}.html'
+        self.dst = f'pages/{template_name}.html'
+        self.dst_url = f'/{self.dst}'
 
     ##############################################
 
@@ -791,7 +791,7 @@ COPYRIGHT_YEAR = datetime.now().year
 COPYRIGHT_NAME = 'PySpice'
 
 PYSPICE_FORUM = 'https://pyspice.discourse.group'
-PYSPICE_BUGTRACKER = GITHUB_URL + '/issues'
+PYSPICE_BUGTRACKER = f'{GITHUB_URL}/issues'
 
 RELEASES_URL = '/releases'
 DEV_RELEASE = 'v1.6'
@@ -817,7 +817,7 @@ TEMPLATE_PAGES_IN_MENU = {
     )
 }
 
-PAGE_LINKS.update(TEMPLATE_PAGES_IN_MENU)
+PAGE_LINKS |= TEMPLATE_PAGES_IN_MENU
 
 TEMPLATE_PAGES = {template.src: template.dst for template in TEMPLATE_PAGES_IN_MENU.values()}
 

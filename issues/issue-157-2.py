@@ -21,7 +21,7 @@ K_P1S1 = 0.1
 circuit = Circuit('2CoupledInductors')
 
 #Primary Side
-circuit.I('I2', circuit.gnd, 'N1', 'AC ' + str(I_P1) + '')
+circuit.I('I2', circuit.gnd, 'N1', f'AC {I_P1}')
 circuit.L('L_P1', circuit.gnd, 'N1', str(L_P1))
 
 # Secondary Side

@@ -113,13 +113,13 @@ class VariableAbc:
 
     @staticmethod
     def to_voltage_name(node):
-        return 'v({})'.format(node)
+        return f'v({node})'
 
     ##############################################
 
     @staticmethod
     def to_branch_name(element):
-        return 'i({})'.format(element)
+        return f'i({element})'
 
     ##############################################
 
@@ -220,7 +220,7 @@ class RawFileAbc:
         if line.startswith(head_line):
             return line
         else:
-            raise NameError("Unexpected line: %s" % (line))
+            raise NameError(f"Unexpected line: {line}")
 
     ##############################################
 
@@ -240,7 +240,7 @@ class RawFileAbc:
         else:
             label = line[:-1]
         if label != expected_label:
-            raise NameError("Expected label %s instead of %s" % (expected_label, label))
+            raise NameError(f"Expected label {expected_label} instead of {label}")
         if has_value:
             return value.strip()
 
@@ -270,7 +270,7 @@ class RawFileAbc:
     def _read_header_variables(self, header_line_iterator):
 
         self.variables = {}
-        for i in range(self.number_of_variables):
+        for _ in range(self.number_of_variables):
             line = (next(header_line_iterator)).decode('utf-8')
             self._logger.debug(line)
             items = [x.strip() for x in line.split('\t') if x]
@@ -287,10 +287,10 @@ class RawFileAbc:
 
         """ Read the raw data and set the variable values. """
 
-        if self.flags == 'real':
-            number_of_columns = self.number_of_variables
-        elif self.flags == 'complex':
+        if self.flags == 'complex':
             number_of_columns = 2*self.number_of_variables
+        elif self.flags == 'real':
+            number_of_columns = self.number_of_variables
         else:
             raise NotImplementedError
 
@@ -300,7 +300,7 @@ class RawFileAbc:
         # np.savetxt('raw.txt', input_data)
         if self.flags == 'complex':
             raw_data = input_data
-            input_data = np.array(raw_data[0::2], dtype='complex128')
+            input_data = np.array(raw_data[::2], dtype='complex128')
             input_data.imag = raw_data[1::2]
         for variable in self.variables.values():
             variable.data = input_data[variable.index]
@@ -354,7 +354,7 @@ class RawFileAbc:
             return self._to_transient_analysis()
         else:
 
-            raise NotImplementedError("Unsupported plot name {}".format(self.plot_name))
+            raise NotImplementedError(f"Unsupported plot name {self.plot_name}")
 
     ##############################################
 

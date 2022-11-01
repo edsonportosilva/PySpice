@@ -34,7 +34,7 @@ y = np.sin(2*np.pi * frequency1 * t) + .5 * np.sin(2*np.pi * frequency2 * t)
 
 yf = fft(y)
 tf = np.linspace(.0, 1./(2.*dt), N//2)
-spectrum = 2./N * np.abs(yf[0:N//2])
+spectrum = 2./N * np.abs(yf[:N//2])
 
 figure1, ax = plt.subplots(figsize=(20, 10))
 
@@ -86,7 +86,7 @@ ax1.set_ylim(-1.5, 1.5)
 
 yf = fft(y)
 tf = np.linspace(.0, 1./(2.*dt), N//2)
-spectrum = 2./N * np.abs(yf[0:N//2])
+spectrum = 2./N * np.abs(yf[:N//2])
 
 ax2.plot(tf, spectrum)
 n = np.arange(1, 20, 2)

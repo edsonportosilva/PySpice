@@ -89,7 +89,7 @@ class SpiceServer:
 
         match = re.match(r'@@@ (\d+) (\d+)', line)
         if match is not None:
-            return int(match.group(2))
+            return int(match[2])
         else:
             raise NameError("Cannot decode the number of points")
 
@@ -126,7 +126,7 @@ class SpiceServer:
             if line.startswith('Warning:'):
                 self._logger.warning(line[len('Warning :'):])
             elif line == 'run simulation(s) aborted':
-                raise NameError('Simulation aborted' + os.linesep + stderr)
+                raise NameError(f'Simulation aborted{os.linesep}{stderr}')
             elif line.startswith('@@@'):
                 number_of_points = self._decode_number_of_points(line)
 

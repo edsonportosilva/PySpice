@@ -128,10 +128,7 @@ silicon_forward_voltage_threshold = .7
 shockley_diode = ShockleyDiode(Is=4e-9, degree=25)
 
 def two_scales_tick_formatter(value, position):
-    if value >= 0:
-        return '{} mA'.format(value)
-    else:
-        return '{} nA'.format(value/100)
+    return f'{value} mA' if value >= 0 else f'{value / 100} nA'
 formatter = ticker.FuncFormatter(two_scales_tick_formatter)
 
 figure, (ax1, ax2) = plt.subplots(2, figsize=(20, 10))
@@ -156,9 +153,14 @@ for temperature in temperatures:
     analysis = analyses[float(temperature)]
     ax1.plot(Vd, - analysis.Vinput * scale)
 ax1.plot(Vd, shockley_diode.I(Vd) * scale, 'black')
-ax1.legend(['@ {} °C'.format(temperature)
-            for temperature in temperatures] + ['Shockley Diode Model Is = 4 nA'],
-           loc=(.02,.8))
+ax1.legend(
+    (
+        [f'@ {temperature} °C' for temperature in temperatures]
+        + ['Shockley Diode Model Is = 4 nA']
+    ),
+    loc=(0.02, 0.8),
+)
+
 ax1.axvline(x=0, color='black')
 ax1.axhline(y=0, color='black')
 ax1.axvline(x=silicon_forward_voltage_threshold, color='red')
@@ -190,7 +192,7 @@ ax2.axvline(x=0, color='black')
 ax2.axvline(x=silicon_forward_voltage_threshold, color='red')
 ax2.axhline(y=1, color='red')
 ax2.text(-1.5, 1.1, 'R limitation = 1 Ω', color='red')
-ax2.legend(['{} Resistance'.format(x) for x in ('Static', 'Dynamic')], loc=(.05,.2))
+ax2.legend([f'{x} Resistance' for x in ('Static', 'Dynamic')], loc=(.05,.2))
 ax2.set_xlabel('Voltage [V]')
 ax2.set_ylabel('Resistance [Ω]')
 

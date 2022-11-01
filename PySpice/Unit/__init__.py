@@ -196,11 +196,11 @@ class PeriodValues(_Unit.UnitValues): # , _Unit.PeriodMixin
 # Define unit shortcuts
 
 def _build_unit_type_shortcut(unit):
-    name = 'U_' + unit.unit_suffix
+    name = f'U_{unit.unit_suffix}'
     define_shortcut(name, unit)
 
 def _build_as_unit_shortcut(unit):
-    name = 'as_' + unit.unit_suffix
+    name = f'as_{unit.unit_suffix}'
     shortcut = unit.validate
     define_shortcut(name, shortcut)
 
@@ -208,7 +208,7 @@ def _exec_body(ns, unit_prefix):
     ns['POWER'] = unit_prefix
 
 def _build_unit_prefix_shortcut(unit, unit_prefix):
-    name = 'u_' + str(unit_prefix) + unit.unit_suffix
+    name = f'u_{str(unit_prefix)}{unit.unit_suffix}'
     if unit.__class__ == _SiUnits.Hertz:
         value_ctor = FrequencyValue
         values_ctor = FrequencyValues
@@ -220,7 +220,7 @@ def _build_unit_prefix_shortcut(unit, unit_prefix):
         values_ctor = _Unit.UnitValues
     prefixed_unit = _Unit.PrefixedUnit(unit, unit_prefix, value_ctor, values_ctor)
     _Unit.PrefixedUnit.register(prefixed_unit)
-    define_shortcut('U' + name[1:], prefixed_unit)
+    define_shortcut(f'U{name[1:]}', prefixed_unit)
     shortcut = UnitValueShorcut(prefixed_unit)
     define_shortcut(name, shortcut)
 

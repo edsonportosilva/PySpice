@@ -33,11 +33,8 @@ from PySpice.Spice.Parser import SpiceParser
 
 path = Path(__file__).parent
 
-with open(path.joinpath('hsop77.cir')) as fh:
-    hsop77 = fh.read()
-
-with open(path.joinpath('hsada4077.cir')) as fh:
-    hsada4077 = fh.read()
+hsop77 = Path(path.joinpath('hsop77.cir')).read_text()
+hsada4077 = Path(path.joinpath('hsada4077.cir')).read_text()
 
 ####################################################################################################
 

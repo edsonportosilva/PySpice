@@ -51,7 +51,7 @@ NUMBER_PLOTS = '2'
 
 #plots of circuit components
 figure = plt.figure(1, (10, 5))
-plot1 = plt.subplot(int(NUMBER_PLOTS+'11'))
+plot1 = plt.subplot(int(f'{NUMBER_PLOTS}11'))
 
 plot(analysis.sw_drive, color='r')
 
@@ -60,7 +60,7 @@ plt.xlabel('t [s]')
 plt.ylabel('[V]')
 plt.legend(('Switch Drive',''), loc=(.05,.1))
 
-plot2 = plt.subplot(int(NUMBER_PLOTS+'12'))
+plot2 = plt.subplot(int(f'{NUMBER_PLOTS}12'))
 
 plot(analysis.sw_node, color='r')
 plot((analysis.sw_node)/circuit['Rload'].resistance,color='b')

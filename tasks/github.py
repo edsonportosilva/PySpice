@@ -35,8 +35,7 @@ REPOSITORY_NAME = "FabriceSalvaire/PySpice"
 
 def get_repo():
     g = Github()
-    repo = g.get_repo(REPOSITORY_NAME)
-    return repo
+    return g.get_repo(REPOSITORY_NAME)
 
 ####################################################################################################
 

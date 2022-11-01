@@ -36,7 +36,7 @@ import PySpice.Spice.NgSpice as NgSpice
 PYSPICE_SOURCE_PATH = Path(__file__).resolve().parents[1]
 
 BASE_URL = 'https://sourceforge.net/projects/ngspice/files'
-RELEASE_URL = BASE_URL + '/ng-spice-rework'
+RELEASE_URL = f'{BASE_URL}/ng-spice-rework'
 RELEASE_NOTE_URL = RELEASE_URL + '/{}/ReleaseNotes.txt/download'
 MANUAL_URL = RELEASE_URL + '/{0}/ngspice-{0}-manual.pdf/download'
 # LATEST_URL = BASE_URL + '/latest/download' # zip
@@ -63,7 +63,7 @@ def get_last_version(ctx):
                 if not hasattr(ctx, 'ngspice_last_version'):
                     ctx.ngspice_last_version = version
                 date = div.find('td', attrs={'headers': 'files_date_h'}).get_text()
-                print('version {} on {}'.format(version, date))
+                print(f'version {version} on {date}')
             except:
                 # raise NameError('Bad version {}'.format(version))
                 pass
@@ -74,7 +74,7 @@ def get_last_version(ctx):
 def get_last_release_note(ctx):
     import requests
     url = RELEASE_NOTE_URL.format(ctx.ngspice_last_version)
-    print('Get {} ...'.format(url))
+    print(f'Get {url} ...')
     response = requests.get(url, allow_redirects=True)
     assert(response.status_code == requests.codes.ok)
     print(response.text)
@@ -83,7 +83,7 @@ def get_last_release_note(ctx):
 
 def donwload_file(url, dst_path):
     import requests
-    print('Get {} ... -> {}'.format(url, dst_path))
+    print(f'Get {url} ... -> {dst_path}')
     response = requests.get(url, allow_redirects=True)
     assert(response.status_code == requests.codes.ok)
     with open(dst_path, mode='wb') as fh:
@@ -96,12 +96,15 @@ def init(ctx):
     if hasattr(ctx, 'ctx.ngspice_base_path'):
         return
 
-    ctx.ngspice_base_path = PYSPICE_SOURCE_PATH.joinpath('ngspice-{}'.format(ctx.ngspice_last_version))
+    ctx.ngspice_base_path = PYSPICE_SOURCE_PATH.joinpath(
+        f'ngspice-{ctx.ngspice_last_version}'
+    )
 
-    ctx.ngspice_source_path = Path(str(ctx.ngspice_base_path) + '-src')
+
+    ctx.ngspice_source_path = Path(f'{str(ctx.ngspice_base_path)}-src')
     print('ngspice source path', ctx.ngspice_source_path)
 
-    ctx.ngspice_build_path = Path(str(ctx.ngspice_base_path) + '-build')
+    ctx.ngspice_build_path = Path(f'{str(ctx.ngspice_base_path)}-build')
     print('ngspice source build', ctx.ngspice_build_path)
 
     # ctx.install_path = Path('/usr', 'local', 'stow', 'ngspice-{}'.format(ctx.ngspice.version))
@@ -117,7 +120,7 @@ def remove_directories(ctx):
             ctx.ngspice_build_path,
             ctx.install_path,
     ):
-        rc = input('remove {} ? [n]/y '.format(path))
+        rc = input(f'remove {path} ? [n]/y ')
         if rc == 'y':
             shutil.rmtree(path, ignore_errors=True)
 
@@ -130,7 +133,7 @@ def get_source(ctx, extract=True):
         return
     # remove_directories(ctx)
     url = TAR_URL.format(ctx.ngspice_last_version)
-    dst_path = 'ngspice-{}.tar.gz'.format(ctx.ngspice_last_version)
+    dst_path = f'ngspice-{ctx.ngspice_last_version}.tar.gz'
     donwload_file(url, dst_path)
     if extract:
         import tarfile
@@ -146,13 +149,14 @@ def configure(ctx):
     configure_path = ctx.ngspice_source_path.joinpath('configure')
     command = [
         str(configure_path),
-        '--prefix={}'.format(ctx.install_path),
-	'--with-ngshared',
-	'--enable-xspice',
-	'--enable-cider',
-	'--enable-openmp',
-    	'--disable-debug',
+        f'--prefix={ctx.install_path}',
+        '--with-ngshared',
+        '--enable-xspice',
+        '--enable-cider',
+        '--enable-openmp',
+        '--disable-debug',
     ]
+
     if not ctx.ngspice_build_path.exists():
         os.mkdir(ctx.ngspice_build_path)
     with ctx.cd(str(ctx.ngspice_build_path)):
@@ -195,7 +199,7 @@ def install(ctx):
 @task(get_last_version)
 def get_manual(ctx):
     url = MANUAL_URL.format(ctx.ngspice_last_version)
-    dst_path = 'ngspice-manual-{}.pdf'.format(ctx.ngspice_last_version)
+    dst_path = f'ngspice-manual-{ctx.ngspice_last_version}.pdf'
     donwload_file(url, dst_path)
 
 ####################################################################################################
@@ -211,7 +215,7 @@ def get_manual(ctx):
 @task(get_last_version)
 def get_windows(ctx):
     url = WINDOWS_URL.format(ctx.ngspice_last_version)
-    dst_path = 'ngspice-{}_64.zip'.format(ctx.ngspice_last_version)
+    dst_path = f'ngspice-{ctx.ngspice_last_version}_64.zip'
     donwload_file(url, dst_path)
 
 ####################################################################################################
@@ -221,5 +225,5 @@ def get_windows_dll(ctx):
     # version = ctx.ngspice_last_version
     version = NgSpice.NGSPICE_SUPPORTED_VERSION
     url = WINDOWS_DLL_URL.format(version)
-    dst_path = 'ngspice-{}_dll_64.zip'.format(version)
+    dst_path = f'ngspice-{version}_dll_64.zip'
     donwload_file(url, dst_path)

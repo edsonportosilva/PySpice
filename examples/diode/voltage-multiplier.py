@@ -33,10 +33,7 @@ source = circuit.SinusoidalVoltageSource('input', 'in', circuit.gnd, amplitude=1
 
 multiplier = 5
 for i in range(multiplier):
-    if i:
-        top_node = i - 1
-    else:
-        top_node = 'in'
+    top_node = i - 1 if i else 'in'
     midlle_node, bottom_node = i + 1, i
     circuit.C(i, top_node, midlle_node, 1@u_mF)
     circuit.X(i, '1N4148', midlle_node, bottom_node)
@@ -62,8 +59,11 @@ for i in range(1, multiplier+1):
     ax.plot(y)
 # ax.axhline(-multiplier*source.amplitude)
 ax.set_ylim(float(-multiplier*1.1*source.amplitude), float(1.1*source.amplitude))
-ax.legend(['input'] + ['*' + str(i) for i in range(1, multiplier+1)] ,
-          loc=(.2,.8))
+ax.legend(
+    ['input'] + [f'*{str(i)}' for i in range(1, multiplier + 1)],
+    loc=(0.2, 0.8),
+)
+
 
 plt.tight_layout()
 plt.show()

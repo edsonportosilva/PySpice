@@ -262,10 +262,7 @@ class Parser:
     def p_float(self, p):
         '''constant : NUMBER
         '''
-        if '.' in p[1]:
-            p[0] = FloatConstant(p[1])
-        else:
-            p[0] = IntConstant(p[1])
+        p[0] = FloatConstant(p[1]) if '.' in p[1] else IntConstant(p[1])
 
     def p_value(self, p):
         '''expression : variable
@@ -340,7 +337,7 @@ class Parser:
         self._reset()
         self._lexer.input(text)
         while True:
-            token = self._lexer.token()
-            if not token:
+            if token := self._lexer.token():
+                print(token)
+            else:
                 break
-            print(token)

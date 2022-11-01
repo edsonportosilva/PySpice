@@ -91,7 +91,7 @@ def fix_file(path):
         fixed_name = dunder.upper().replace('__', '')
         content = content.replace(dunder, fixed_name)
 
-    os.rename(path, str(path) + '~~~')
+    os.rename(path, f'{str(path)}~~~')
     with open(path, 'w') as fh:
         fh.write(content)
 

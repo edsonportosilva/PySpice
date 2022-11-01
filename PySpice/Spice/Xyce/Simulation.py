@@ -48,7 +48,7 @@ class XyceCircuitSimulator(CircuitSimulator):
 
         super().__init__(circuit, **kwargs)
 
-        xyce_command = kwargs.get('xyce_command', None)
+        xyce_command = kwargs.get('xyce_command')
         self._xyce_server = XyceServer(xyce_command=xyce_command)
 
     ##############################################

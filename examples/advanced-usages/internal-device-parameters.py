@@ -40,21 +40,10 @@ circuit.V('ss', 'vsss', circuit.gnd, 0)
 circuit.V('sig', 'g1', 'vsss', 0)
 circuit.X('mos1', 'level1', 'd1', 'g1', 'vsss')
 
-if True:
-    circuit.subcircuit(Level1())
-else:
-    subcircuit_level2 = SubCircuit('level2', 'd4', 'g4', 'v4')
-    subcircuit_level2.M(1, 'd4', 'g4', 'v4', 'v4', model='NMOS', w=1e-5, l=3.5e-7)
-
-    subcircuit_level1 = SubCircuit('level1', 'd3', 'g3', 'v3')
-    subcircuit_level1.X('mos2', 'level2', 'd3', 'g3', 'v3')
-    subcircuit_level1.subcircuit(subcircuit_level2)
-
-    circuit.subcircuit(subcircuit_level1)
-
+circuit.subcircuit(Level1())
 circuit.model('NMOS', 'NMOS', LEVEL=8)
 
-print(str(circuit))
+print(circuit)
 
 ####################################################################################################
 

@@ -47,10 +47,11 @@ def compute_exact_finite_difference_coefficients(derivative_order, grid, x0=0):
     N = len(grid)
 
     # d[m,n,v]
-    d = [[[0
-           for v in range(N)]
-          for n in range(N)]
-         for m in range(derivative_order +1)]
+    d = [
+        [[0 for _ in range(N)] for _ in range(N)]
+        for _ in range(derivative_order + 1)
+    ]
+
 
     d[0][0][0] = fractions.Fraction(1,1)
     c1 = 1
@@ -97,7 +98,7 @@ def get_finite_difference_coefficients(derivative_order, accuracy_order, grid_ty
     else:
         raise ValueError("Wrong grid type")
 
-    key = '{}-{}'.format(derivative_order, accuracy_order)
+    key = f'{derivative_order}-{accuracy_order}'
     coefficients = _coefficient_cache[grid_type].get(key, None)
     if coefficients is None:
         coefficients = compute_finite_difference_coefficients(derivative_order, grid)

@@ -63,17 +63,17 @@ def make_path(*args):
 ####################################################################################################
 
 def is_example(root, filename):
-    if filename.suffix == '.py' and str(filename).islower():
-        path = root.joinpath(filename)
-        if path.is_symlink():
-            return None
-        with open(path) as fh:
-            for line in fh.readlines()[:2]:
-                line = line.strip()
-                if line == '#skip#':
-                    return None
-        return path
-    return None
+    if filename.suffix != '.py' or not str(filename).islower():
+        return None
+    path = root.joinpath(filename)
+    if path.is_symlink():
+        return None
+    with open(path) as fh:
+        for line in fh.readlines()[:2]:
+            line = line.strip()
+            if line == '#skip#':
+                return None
+    return path
 
 ####################################################################################################
 
@@ -111,7 +111,7 @@ def run_example(path):
         content = content.replace('plt.show()', '#plt.show()')
         tmp_fh.write(content.encode('utf-8'))
 
-    print('Run {}'.format(path))
+    print(f'Run {path}')
     # _ = path
     _ = tmp_path
     command = (sys.executable, str(_)) # else TypeError: argument of type 'WindowsPath' is not iterable
@@ -133,7 +133,7 @@ def on_linux(path):
     ]
 
     if str(path) in skipped_files:
-        print('Skip {}'.format(path))
+        print(f'Skip {path}')
         return 'skipped'
 
     return run_example(path)
@@ -153,7 +153,7 @@ def on_osx(path):
         ]
 
     if str(path) in skipped_files:
-        print('Skip {}'.format(path))
+        print(f'Skip {path}')
         return 'skipped'
 
     return run_example(path)
@@ -174,7 +174,7 @@ def on_windows(path):
     ]
 
     if str(path) in skipped_files:
-        print('Skip {}'.format(path))
+        print(f'Skip {path}')
         return 'skipped'
 
     return run_example(path)

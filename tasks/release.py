@@ -65,17 +65,16 @@ def show_import(ctx):
         position = line.find('.')
         if position != -1:
             line = line[:position]
-        line = line.strip()
-        if line:
+        if line := line.strip():
             imports.add(line)
     imports -= set(STANDARD_PACKAGES)
-    imports -= set((package,))
+    imports -= {package}
     for item in sorted(imports):
         print(item)
 
 @task
 def find_package(ctx, name):
-    ctx.run('pip freeze | grep -i {}'.format(name))
+    ctx.run(f'pip freeze | grep -i {name}')
 
 ####################################################################################################
 
@@ -84,12 +83,9 @@ def update_git_sha(ctx):
     # Fixme: wrong workflow, must tag the last commit
     result = ctx.run('git describe --tags --abbrev=0 --always', hide='out')
     tag = result.stdout.strip()
-    if tag.startswith('v'):
-        version = tag[1:]
-    else:
-        version = tag
+    version = tag[1:] if tag.startswith('v') else tag
     if not re.match('\d+(\.\d+(\.\d+)?)?', version):
-        raise ValueError('Invalid version {}'.format(version))
+        raise ValueError(f'Invalid version {version}')
     result = ctx.run('git rev-parse HEAD', hide='out')
     sha = result.stdout.strip()
     print(sha)
@@ -101,11 +97,11 @@ def update_git_sha(ctx):
     with open(filename, 'w') as fh:
         for line in lines:
             if line.startswith('__version__'):
-                line = "__version__ = '{}'\n".format(version)
+                line = f"__version__ = '{version}'\n"
             if line.startswith('__git_tag__'):
-                line = "__git_tag__ = '{}'\n".format(tag)
+                line = f"__git_tag__ = '{tag}'\n"
             if line.startswith('__git_sha__'):
-                line = "__git_sha__ = '{}'\n".format(sha)
+                line = f"__git_sha__ = '{sha}'\n"
             fh.write(line)
 
 ####################################################################################################
@@ -169,13 +165,13 @@ def get_wheel(ctx):
     version = data['info']['version']
     filename = data['urls'][0]['filename']
     wheel_url = data['urls'][0]['url']
-    print('Get version {}'.format(version))
-    ctx.run('curl --output {} {}'.format(filename, wheel_url))
+    print(f'Get version {version}')
+    ctx.run(f'curl --output {filename} {wheel_url}')
     asc_suffix = '.asc'
     filename_asc = filename + asc_suffix
-    ctx.run('curl --output {} {}'.format(filename_asc, wheel_url + asc_suffix))
+    ctx.run(f'curl --output {filename_asc} {wheel_url + asc_suffix}')
     # ctx.run('gpg --keyserver pgp.mit.edu --search-keys {}'.format(key_id))
-    ctx.run('gpg --verify {} {}'.format(filename_asc, filename))
+    ctx.run(f'gpg --verify {filename_asc} {filename}')
 
 ####################################################################################################
 
@@ -184,7 +180,7 @@ def get_github_tar_sha(ctx):
     # Fixme: check git sha
     result = ctx.run('git describe --tags --abbrev=0 --always', hide='out')
     tag = result.stdout.strip()
-    url = 'https://github.com/FabriceSalvaire/PySpice/archive/{}.tar.gz'.format(tag)
+    url = f'https://github.com/FabriceSalvaire/PySpice/archive/{tag}.tar.gz'
     print('Get', url)
     import hashlib
     import requests

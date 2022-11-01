@@ -18,10 +18,9 @@ class PI(SubCircuit):
         SubCircuit.__init__(self, name, *self.__nodes__)
 
         self.BehavioralSource(
-            'Vprop',
-            'prop', self.gnd,
-            voltage_expression='{}*(V(In+)-V(In-))'.format(K),
+            'Vprop', 'prop', self.gnd, voltage_expression=f'{K}*(V(In+)-V(In-))'
         )
+
         self.BehavioralSource(
             'Vsum',
             'sum', self.gnd,
@@ -29,9 +28,11 @@ class PI(SubCircuit):
         )
         self.BehavioralSource(
             'Vdiffclip',
-            'overfl', self.gnd,
-            voltage_expression='{}*(V(Out)-V(sum))'.format(AWG),
+            'overfl',
+            self.gnd,
+            voltage_expression=f'{AWG}*(V(Out)-V(sum))',
         )
+
         self.BehavioralSource(
             'Vsum2',
             'antiwind', self.gnd,

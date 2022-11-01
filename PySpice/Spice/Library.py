@@ -74,12 +74,12 @@ class SpiceLibrary:
         for path in self._directory.iter_file():
             extension = path.extension.lower()
             if extension in self.EXTENSIONS:
-                self._logger.debug("Parse {}".format(path))
+                self._logger.debug(f"Parse {path}")
                 try:
                     spice_parser = SpiceParser(path=path, recurse=recurse, section=section)
                     for lib in spice_parser.incl_libs:
-                        self._subcircuits.update(lib._subcircuits)
-                        self._models.update(lib._models)
+                        self._subcircuits |= lib._subcircuits
+                        self._models |= lib._models
                 except Exception as e:
                     # Parse problem with this file, so skip it and keep going.
                     self._logger.warn("Problem parsing {path} - {e}".format(**locals()))
@@ -142,9 +142,9 @@ class SpiceLibrary:
 
     def search(self, s):
         """ Return dict of all models/subcircuits with names matching regex s. """
-        matches = {}
         models_subcircuits = {**self._models, **self._subcircuits}
-        for name, mdl_subckt in models_subcircuits.items():
-            if re.search(s, name):
-                matches[name] = mdl_subckt
-        return matches
+        return {
+            name: mdl_subckt
+            for name, mdl_subckt in models_subcircuits.items()
+            if re.search(s, name)
+        }

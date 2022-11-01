@@ -69,14 +69,14 @@ class ParameterDescriptor:
     def __get__(self, instance, owner=None):
 
         try:
-            return getattr(instance, '_' + self._attribute_name)
+            return getattr(instance, f'_{self._attribute_name}')
         except AttributeError:
             return self.default_value
 
     ##############################################
 
     def __set__(self, instance, value):
-        setattr(instance, '_' + self._attribute_name, value)
+        setattr(instance, f'_{self._attribute_name}', value)
 
     ##############################################
 
@@ -193,10 +193,7 @@ class FloatPositionalParameter(PositionalElementParameter):
 
     def validate(self, value):
 
-        if isinstance(value, Unit):
-            return value
-        else:
-            return Unit(value)
+        return value if isinstance(value, Unit) else Unit(value)
 
 ####################################################################################################
 
@@ -213,10 +210,7 @@ class InitialStatePositionalParameter(PositionalElementParameter):
 
     def to_str(self, instance):
 
-        if self.__get__(instance):
-            return 'on'
-        else:
-            return 'off'
+        return 'on' if self.__get__(instance) else 'off'
 
 ####################################################################################################
 
@@ -259,10 +253,7 @@ class FlagParameter(ParameterDescriptor):
 
     def to_str(self, instance):
 
-        if self.nonzero(instance):
-            return 'off'
-        else:
-            return ''
+        return 'off' if self.nonzero(instance) else ''
 
 ####################################################################################################
 
@@ -294,10 +285,7 @@ class KeyValueParameter(ParameterDescriptor):
 
     def to_str(self, instance):
 
-        if bool(self):
-            return '{}={}'.format(self.spice_name, self.str_value(instance))
-        else:
-            return ''
+        return f'{self.spice_name}={self.str_value(instance)}' if bool(self) else ''
 
 ####################################################################################################
 
@@ -314,10 +302,7 @@ class BoolKeyParameter(KeyValueParameter):
 
     def str_value(self, instance):
 
-        if self.nonzero(instance):
-            return '1'
-        else:
-            return '0'
+        return '1' if self.nonzero(instance) else '0'
 
 ####################################################################################################
 
